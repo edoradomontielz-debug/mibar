@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Bar Digital</title>
+    <style>
+        /* Paleta de Colores: Negro y Violeta Neón con toques Cromados */
+        :root {
+            --bg-color: #050505; 
+            --neon-violet: #DBB5FF; 
+            --neon-violet-dim: rgba(219, 181, 255, 0.3);
+            --text-main: #f0f0f0;
+            --text-muted: #999;
+            --glass-bg: rgba(20, 20, 25, 0.75);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100%;
+            background-image: radial-gradient(var(--neon-violet-dim) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* --- Pantalla de Inicio (Neon Sign) --- */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 1000; cursor: pointer;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neon-sign {
+            font-size: 5rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 12px;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-violet);
+            text-shadow: 0 0 15px var(--neon-violet-dim);
+            animation: flicker 4s infinite alternate;
+            margin: 0; text-align: center;
+        }
+
+        .splash-subtitle {
+            margin-top: 15px; font-size: 1rem; color: var(--neon-violet);
+            letter-spacing: 5px; text-transform: uppercase; opacity: 0.8;
+            text-align: center;
+        }
+
+        .click-to-enter {
+            margin-top: 40px; font-size: 0.9rem; color: var(--text-muted);
+            border: 1px solid var(--text-muted); padding: 8px 20px;
+            border-radius: 20px; animation: pulse-border 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                color: var(--neon-violet);
+                text-shadow: 0 0 10px var(--neon-violet), 0 0 20px var(--neon-violet), 0 0 40px var(--neon-violet);
+            }
+            20%, 24%, 55% { color: transparent; text-shadow: none; }
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(219, 181, 255, 0.2); color: rgba(255,255,255,0.5); }
+            50% { border-color: var(--neon-violet); color: var(--neon-violet); box-shadow: 0 0 10px var(--neon-violet-dim); }
+        }
+
+        /* --- Contenedor Principal (App) --- */
+        #app {
+            display: none; max-width: 1200px; margin: 0 auto;
+            padding: 40px 20px; box-sizing: border-box; flex-direction: column;
+            animation: fade-in-up 0.8s ease-out forwards;
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header { text-align: center; margin-bottom: 40px; }
+
+        h1.main-title {
+            color: var(--neon-violet); letter-spacing: 4px;
+            text-transform: uppercase; font-size: 2.5rem; margin-bottom: 25px;
+            text-shadow: 0 0 15px var(--neon-violet-dim);
+        }
+
+        /* Navegación y Filtros */
+        .category-buttons {
+            display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 30px;
+            border: 1px solid #222; backdrop-filter: blur(5px);
+        }
+
+        button.cat-btn {
+            background: transparent; color: var(--text-muted); border: none;
+            padding: 10px 25px; font-size: 1rem; border-radius: 20px;
+            cursor: pointer; transition: all 0.3s;
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+        }
+
+        button.cat-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        button.cat-btn.active {
+            background-color: var(--neon-violet); color: var(--bg-color);
+            box-shadow: 0 0 15px var(--neon-violet-dim);
+        }
+
+        /* --- Cuadrícula de Recetas --- */
+        #recipe-list {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px; width: 100%;
+        }
+
+        .recipe-item {
+            background: var(--glass-bg); padding: 25px 20px;
+            border: 1px solid rgba(255,255,255,0.08); border-top: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            backdrop-filter: blur(12px); position: relative; overflow: hidden;
+        }
+
+        .recipe-item::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(219, 181, 255, 0.1) 0%, transparent 60%);
+            opacity: 0; transition: opacity 0.4s; z-index: 0;
+        }
+
+        .recipe-item:hover {
+            transform: translateY(-8px); border-color: var(--neon-violet);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px var(--neon-violet-dim);
+        }
+        .recipe-item:hover::before { opacity: 1; }
+        .recipe-item > * { position: relative; z-index: 1; }
+
+        .item-emoji { font-size: 3.5rem; margin-bottom: 15px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        .item-name { font-size: 1.3rem; font-weight: bold; color: var(--text-main); margin-bottom: 10px; }
+        .item-preview {
+            font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;
+            max-width: 90%; display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden; font-style: italic;
+        }
+
+        /* --- Ventana Emergente (Modal) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); display: none; 
+            justify-content: center; align-items: center; z-index: 2000;
+            opacity: 0; transition: opacity 0.3s ease; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.show { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: #111; padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 550px; position: relative;
+            border: 1px solid var(--neon-violet);
+            box-shadow: 0 0 40px rgba(219, 181, 255, 0.15), inset 0 0 20px rgba(219, 181, 255, 0.05);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 85vh; overflow-y: auto;
+        }
+
+        .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
+
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: #000; border-radius: 10px; }
+        .modal-content::-webkit-scrollbar-thumb { background: var(--neon-violet-dim); border-radius: 10px; }
+
+        .close-btn {
+            position: absolute; top: 15px; right: 25px; font-size: 2.5rem;
+            cursor: pointer; color: var(--text-muted); transition: color 0.2s; line-height: 1;
+        }
+        .close-btn:hover { color: var(--neon-violet); text-shadow: 0 0 10px var(--neon-violet); }
+
+        .modal-header {
+            text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px; margin-bottom: 25px;
+        }
+
+        .modal-emoji { font-size: 4.5rem; margin: 0 0 10px 0; filter: drop-shadow(0 0 15px var(--neon-violet-dim)); }
+        .details-title {
+            color: var(--neon-violet); margin: 0; font-size: 2rem;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .modal-category-tag {
+            display: inline-block; background: rgba(219, 181, 255, 0.1);
+            color: var(--neon-violet); padding: 4px 12px; border-radius: 15px;
+            font-size: 0.8rem; margin-top: 10px; border: 1px solid var(--neon-violet-dim);
+        }
+
+        h3 {
+            color: #fff; margin-top: 25px; font-size: 1.1rem; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #222; padding-bottom: 5px;
+        }
+        h3::before {
+            content: ''; display: block; width: 8px; height: 8px;
+            background: var(--neon-violet); border-radius: 50%; box-shadow: 0 0 8px var(--neon-violet);
+        }
+
+        ul, ol { line-height: 1.8; color: #ccc; padding-left: 20px; }
+        li::marker { color: var(--neon-violet); font-weight: bold; }
+        li strong { color: #fff; }
+        .prep-list li { margin-bottom: 5px; list-style-type: square; }
+
+        /* ========================================= */
+        /* ADAPTACIÓN PARA MÓVILES (Media Queries)   */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            /* Pantalla de inicio */
+            .neon-sign { font-size: 3.2rem; letter-spacing: 8px; }
+            .splash-subtitle { font-size: 0.85rem; letter-spacing: 3px; }
+
+            /* Encabezado */
+            #app { padding: 20px 10px; }
+            h1.main-title { font-size: 1.8rem; letter-spacing: 2px; margin-bottom: 20px; }
+            
+            /* Botones del menú */
+            .category-buttons { gap: 8px; padding: 8px; border-radius: 15px; }
+            button.cat-btn { padding: 8px 14px; font-size: 0.85rem; border-radius: 12px; }
+
+            /* Cuadrícula a una sola columna */
+            #recipe-list { 
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+
+            /* Reducir tamaño de las tarjetas */
+            .recipe-item { padding: 15px; border-radius: 12px; }
+            .item-emoji { font-size: 2.8rem; margin-bottom: 10px; }
+            .item-name { font-size: 1.1rem; }
+
+            /* Ajustes de la Ventana Emergente (Modal) */
+            .modal-content { 
+                padding: 25px 20px; 
+                max-height: 90vh; 
+                border-radius: 15px;
+            }
+            .close-btn { top: 10px; right: 15px; font-size: 2rem; }
+            .modal-emoji { font-size: 3.5rem; }
+            .details-title { font-size: 1.5rem; }
+            h3 { font-size: 1rem; margin-top: 20px; }
+            ul, ol { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de Inicio -->
+    <div id="splash-screen" onclick="enterBar()">
+        <h1 class="neon-sign">Mi Bar</h1>
+        <div class="splash-subtitle">Digital Mixology</div>
+        <div class="click-to-enter">INGRESAR AL MENÚ</div>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div id="app" class="hidden">
+        <header>
+            <h1 class="main-title">Menú de Bebidas</h1>
+            <div class="category-buttons">
+                <button class="cat-btn active" id="btn-all" onclick="loadCategory('Todas', this)">Todas</button>
+                <button class="cat-btn" onclick="loadCategory('Vodka', this)">Vodka</button>
+                <button class="cat-btn" onclick="loadCategory('Tequila', this)">Tequila</button>
+                <button class="cat-btn" onclick="loadCategory('Ron', this)">Ron</button>
+                <button class="cat-btn" onclick="loadCategory('Café', this)">Café</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="recipe-list"></div>
+        </main>
+    </div>
+
+    <!-- Ventana Emergente (Modal) -->
+    <div id="drink-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modal-body">
+                <!-- Se inyecta con JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de Datos de las 40 Cócteles
+        const cocktails = {
+            "Vodka": [
+                { name: "Ruso Blanco Espumoso", emoji: "🥛", glass: "Vaso corto (Old Fashioned)", prep: "Ninguna preparación especial. Solo asegúrate de tener hielos grandes.", ingredients: ["1.5 oz de Vodka", "1 oz de Licor de café", "1.5 oz de Leche entera o evaporada"], steps: ["Pon todos los ingredientes en el shaker con hielo.", "Agita vigorosamente para espumar la leche.", "Usa el colador y sirve en el vaso corto con hielo fresco."] },
+                { name: "Pantera Rosa", emoji: "🩷", glass: "Vaso alto (Highball)", prep: "Enfriar el vaso previamente con hielo mientras preparas la mezcla.", ingredients: ["1.5 oz de Vodka", "0.5 oz de Granadina", "2 oz de Leche"], steps: ["Agrega hielo al shaker junto con el vodka, leche y granadina.", "Agita muy fuerte para inflar la leche.", "Pasa por el colador hacia el vaso alto."] },
+                { name: "Vodka Sour", emoji: "🍋", glass: "Vaso corto", prep: "Opcional: Escarchar solo la mitad del borde del vaso con limón y azúcar blanca.", ingredients: ["2 oz de Vodka", "1 oz de Jugo de limón", "1 oz de Jarabe natural"], steps: ["Vierte todo en el shaker con hielo.", "Agita con mucha fuerza para dar textura sedosa.", "Usa el colador y sirve sobre hielo fresco."] },
+                { name: "Caipiroska Agitada", emoji: "🧊", glass: "Vaso corto", prep: "Ninguna. Los limones macerados formarán la base estética en el vaso.", ingredients: ["2 oz de Vodka", "Medio limón en cubos", "2 cdas. de Azúcar"], steps: ["Pon limón y azúcar dentro del shaker vacío.", "Usa el macerador para aplastarlos ahí mismo.", "Agrega hielo y vodka, agita fuerte y sirve todo junto (sin colar) en el vaso."] },
+                { name: "Kamikaze Económico", emoji: "🍊", glass: "Vaso corto", prep: "Escarchar el borde completo con limón y sal (o azúcar, según prefieras el contraste).", ingredients: ["1.5 oz de Vodka", "1 oz de Jugo de limón", "1 oz de Jugo de naranja"], steps: ["Pon hielo en el shaker, añade el vodka y los jugos.", "Agita fuertemente por 10 segundos.", "Sirve con el colador cuidando no arruinar el escarchado."] },
+                { name: "Mermelada Smash", emoji: "🍓", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["2 oz de Vodka", "1 oz de Jugo de limón", "2 cdas. Mermelada al gusto"], steps: ["Pon hielo, vodka, limón y mermelada en el shaker.", "Agita con extrema fuerza.", "Usa el colador para retener trozos grandes de fruta al servir."] },
+                { name: "Cosmo Casero", emoji: "🍸", glass: "Copa de cóctel (Martini)", prep: "Meter la copa al congelador por 5 minutos o llenarla de agua con hielo antes de servir para que esté helada.", ingredients: ["1.5 oz de Vodka", "1.5 oz Jugo de arándano", "0.5 oz Jugo de limón", "Un chorrito de jarabe"], steps: ["Llena el shaker con hielo y líquidos.", "Agita vigorosamente.", "Tira el hielo de la copa y usa el colador para servir la mezcla pura."] },
+                { name: "Brisa Marina", emoji: "🌬️", glass: "Vaso alto", prep: "Llenar el vaso de hielo hasta el tope antes de servir.", ingredients: ["1.5 oz de Vodka", "2 oz Jugo de arándano", "1.5 oz Jugo de toronja"], steps: ["Pon hielo y todos los líquidos en el shaker.", "Agita por 10 segundos.", "Sirve usando el colador."] },
+                { name: "Laguna Azul", emoji: "🌊", glass: "Vaso alto", prep: "Añadir hielo triturado o en cubos pequeños al vaso para un efecto más fresco.", ingredients: ["1.5 oz de Vodka", "1 oz de Curazao Azul", "1 oz de Jugo limón", "0.5 oz de Jarabe"], steps: ["Llena el shaker con hielo y los ingredientes.", "Agita muy fuerte para dar textura.", "Usa el colador para servir."] },
+                { name: "Neon Violet Fizz", emoji: "🔮", glass: "Vaso alto transparente", prep: "Dejar el vaso impecable. La estética de colores hablará por sí sola.", ingredients: ["1.5 oz de Vodka", "0.5 oz Curazao Azul", "0.5 oz Granadina", "Refresco de limón"], steps: ["Agita en el shaker hielo, vodka, Curazao y Granadina.", "Usa el colador para servir el líquido violeta.", "Rellena con el refresco hasta arriba."] }
+            ],
+            "Tequila": [
+                { name: "Sombrero Mexicano", emoji: "☕", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["1.5 oz de Tequila", "1 oz de Licor de café", "1 oz de Leche"], steps: ["Añade hielo, tequila, licor y leche al shaker.", "Agita con mucha fuerza.", "Sirve con el colador sobre hielo nuevo."] },
+                { name: "Horchata Brava", emoji: "🥛", glass: "Vaso corto o cantarito", prep: "Escarchar el borde con limón y una mezcla de azúcar y canela en polvo.", ingredients: ["1.5 oz de Tequila", "3 oz de Agua de Horchata", "Pizca de canela"], steps: ["Pon hielo, tequila y agua de horchata en el shaker.", "Agita fuertemente por 10 segundos.", "Sirve con el colador."] },
+                { name: "Margarita Clásica", emoji: "🍸", glass: "Copa Margarita o Vaso corto", prep: "Humedecer el borde con un cuarto de limón y pasarlo por un plato con sal fina para escarchar.", ingredients: ["1.5 oz de Tequila", "1 oz de Jugo de limón", "1 oz de Jarabe natural"], steps: ["En el shaker, agita fuertemente tequila, limón y jarabe.", "Sirve usando el colador en tu copa escarchada con hielo."] },
+                { name: "Tequila Sour", emoji: "🍋", glass: "Vaso corto", prep: "Ninguna preparación especial.", ingredients: ["1.5 oz de Tequila", "1 oz de Jugo de limón", "0.5 oz de Jarabe", "Pizca de sal"], steps: ["Pon hielo, tequila, limón, jarabe y sal en el shaker.", "Agita con mucha intensidad.", "Usa el colador y sirve en vaso corto."] },
+                { name: "Paloma Batida", emoji: "🍹", glass: "Vaso alto", prep: "Escarchar el borde con limón y sal de grano o chile en polvo.", ingredients: ["1.5 oz de Tequila", "0.5 oz de Jugo de limón", "Pizca de sal", "Refresco de Toronja"], steps: ["Agita en el shaker el hielo, tequila, limón y sal.", "Sirve con el colador en tu vaso escarchado.", "Rellena con refresco y revuelve con cuchara."] },
+                { name: "Vampiro Shaker", emoji: "🍅", glass: "Vaso alto", prep: "Escarchar abundantemente con chile en polvo (tipo Tajín) y limón.", ingredients: ["1.5 oz de Tequila", "1 oz de Jugo de tomate (o Sangrita)", "0.5 oz de Jugo de Limón"], steps: ["En el shaker con hielo, agrega tequila, tomate y limón.", "Agita rápido para enfriar sin hacer mucha agua.", "Sirve con el colador."] },
+                { name: "Matador", emoji: "🍍", glass: "Vaso corto", prep: "Enfriar el vaso. Opcional: decorar con una hoja de piña.", ingredients: ["1.5 oz de Tequila", "2 oz de Jugo de piña", "0.5 oz de Jugo de limón"], steps: ["Introduce hielo, tequila, piña y limón al shaker.", "Agita con fuerza para espumar la piña natural.", "Sirve con el colador."] },
+                { name: "Tequila Sunrise", emoji: "🌅", glass: "Vaso alto curvo", prep: "Ninguna. La altura del vaso es clave para el degradado de colores.", ingredients: ["1.5 oz de Tequila", "3 oz de Jugo de naranja", "0.5 oz de Granadina"], steps: ["En el shaker, agita tequila y naranja con hielo.", "Sirve usando el colador en el vaso.", "Deja caer la granadina directo al vaso; bajará sola por el peso."] },
+                { name: "Margarita Azul", emoji: "🌌", glass: "Copa Margarita", prep: "Escarchar el borde con limón y sal.", ingredients: ["1.5 oz de Tequila", "1 oz de Curazao Azul", "1 oz de Jugo de limón"], steps: ["En el shaker, agita tequila, Curazao y limón con hielo.", "Sirve con el colador cuidando el escarchado de sal."] },
+                { name: "Eclipse Violeta", emoji: "🌒", glass: "Vaso corto", prep: "Añadir un solo cubo de hielo muy grande al vaso si es posible.", ingredients: ["1.5 oz de Tequila", "0.5 oz Curazao Azul", "0.5 oz Granadina", "1 oz Jugo de limón"], steps: ["Agrega hielo y todos los ingredientes al shaker.", "Agita fuerte para unificar el color negro/violeta.", "Sirve con el colador."] }
+            ],
+            "Ron": [
+                { name: "Piña Colada Express", emoji: "🥥", glass: "Copa Huracán o Vaso alto curvo", prep: "Ninguna, aunque un vaso frío ayuda a mantener la textura cremosa.", ingredients: ["1.5 oz de Ron", "2 oz de Jugo de piña", "1 oz de Crema de coco"], steps: ["Llena el shaker con hielo, ron, jugo y crema de coco.", "Agita fuertemente hasta sentir el metal súper helado.", "Usa tu colador y sirve."] },
+                { name: "Ron Crema Batido", emoji: "☕", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["1.5 oz de Ron", "1 oz de Licor de café", "1 oz de Leche"], steps: ["Pon hielo, ron, licor de café y leche en el shaker.", "Agita con mucha fuerza.", "Sirve con tu colador sobre hielo nuevo."] },
+                { name: "Daiquirí Clásico", emoji: "🍸", glass: "Copa de cóctel (Martini)", prep: "La copa debe estar completamente congelada previamente.", ingredients: ["2 oz de Ron", "1 oz de Jugo de limón", "0.75 oz de Jarabe natural"], steps: ["Añade hielo, ron, limón y jarabe al shaker.", "Agita fuertemente por 10-15 segundos.", "Usa el colador para que caiga líquido limpio sin hielos."] },
+                { name: "Ron Sour", emoji: "🍋", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["2 oz de Ron", "1 oz de Jugo de limón", "0.5 oz de Jugo de naranja", "0.5 oz de Jarabe"], steps: ["Llena el shaker con hielo, ron, cítricos y jarabe.", "Agita con vigor.", "Usa el colador y sirve en vaso con hielo."] },
+                { name: "Mojito Batido", emoji: "🌿", glass: "Vaso alto", prep: "Ninguna. Los ingredientes irán directos con todo e hielo.", ingredients: ["1.5 oz de Ron", "Hojas de hierbabuena", "1 oz de Limón", "0.5 oz Jarabe", "Agua mineral"], steps: ["En el shaker, pon hierbabuena, limón y jarabe. Aplasta levemente con el macerador.", "Agrega hielo, ron y agita.", "Sirve todo sin colar y rellena con agua mineral."] },
+                { name: "Ponche de Ron", emoji: "🍹", glass: "Vaso alto", prep: "Llenar de hielos hasta arriba.", ingredients: ["1.5 oz de Ron", "1 oz de Jugo de naranja", "1 oz de Jugo de piña", "0.5 oz de Granadina"], steps: ["Pon hielo y todos los ingredientes en el shaker.", "Agita fuerte hasta mezclar bien los jugos.", "Usa el colador y sirve."] },
+                { name: "Mary Pickford", emoji: "🍒", glass: "Copa Martini", prep: "Enfriar la copa con hielos por 3 minutos y tirar los hielos antes de servir.", ingredients: ["1.5 oz de Ron", "1.5 oz Jugo de piña", "0.5 oz de Granadina"], steps: ["Agrega hielo, ron, piña y granadina en el shaker.", "Agita fuerte para crear una ligera espuma rosada.", "Sirve con el colador."] },
+                { name: "Floridita Económico", emoji: "🍊", glass: "Copa Martini", prep: "Congelar la copa unos minutos.", ingredients: ["1.5 oz de Ron", "1 oz Jugo de toronja", "0.5 oz Jugo de limón", "0.5 oz Jarabe"], steps: ["Vierte hielo, ron, toronja, limón y jarabe al shaker.", "Agita muy vigorosamente para enfriar al máximo.", "Sirve limpio con el colador."] },
+                { name: "Caribe Azul", emoji: "🏝️", glass: "Vaso alto o Copa Huracán", prep: "Añadir mucho hielo en cubos pequeños.", ingredients: ["1.5 oz de Ron", "0.5 oz Curazao Azul", "2 oz de Jugo de piña"], steps: ["Pon hielo, ron, Curazao y piña en el shaker.", "Agita fuertemente. Dará un tono turquesa/verde-azulado.", "Sirve con el colador."] },
+                { name: "Azul Profundo", emoji: "🌊", glass: "Copa Martini o Vaso corto", prep: "Enfriar previamente el cristal.", ingredients: ["1.5 oz de Ron", "1 oz de Curazao Azul", "1 oz de Jugo de limón", "0.5 oz de Jarabe"], steps: ["Vierte todos los líquidos al shaker con hielo.", "Agita por 15 segundos.", "Usa el colador para servir."] }
+            ],
+            "Café": [
+                { name: "Espresso Martini", emoji: "🍸", glass: "Copa Martini", prep: "Congelar la copa. Al servir, tener 3 granos de café listos para adornar la espuma.", ingredients: ["1.5 oz de Vodka", "1 oz de Licor de café", "1 oz de Café concentrado", "0.5 oz de Jarabe"], steps: ["Llena el shaker con hielo, vodka, licor, café y jarabe.", "Agita con extrema fuerza por 15 segundos.", "Sirve con colador; la espuma quedará arriba."] },
+                { name: "Ruso Expreso", emoji: "🥛", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["1.5 oz de Vodka", "1 oz de Licor de café", "1 oz de Café frío", "1.5 oz de Leche"], steps: ["Pon todos los ingredientes en el shaker con abundante hielo.", "Agita muy fuerte para espumar la leche y el café.", "Sirve con el colador."] },
+                { name: "Margarita Despierta", emoji: "⚡", glass: "Vaso corto", prep: "Escarchar la mitad del vaso con azúcar y canela molida.", ingredients: ["1.5 oz de Tequila", "1.5 oz de Café frío", "0.5 oz de Jarabe", "Pizca de canela"], steps: ["Vierte en el shaker el hielo, tequila, café, jarabe y canela.", "Agita vigorosamente por 10 segundos.", "Sirve con el colador cuidando el escarchado."] },
+                { name: "Tequila Lechero", emoji: "☕", glass: "Vaso corto", prep: "Ninguna.", ingredients: ["1.5 oz de Tequila", "1.5 oz de Café frío", "1 oz de Leche condensada"], steps: ["Pon el tequila, café y leche condensada en el shaker con hielo.", "Agita mucho para disolver y unificar lo espeso de la leche.", "Sirve con el colador."] },
+                { name: "Carajillo Pirateado", emoji: "🏴‍☠️", glass: "Vaso corto", prep: "Tener un cubo grande de hielo listo en el vaso.", ingredients: ["1.5 oz de Ron", "1.5 oz de Café concentrado", "0.5 oz de Jarabe o miel"], steps: ["Añade hielo, ron, café frío y jarabe al shaker.", "Agita muy fuerte para unificar e inflar el café.", "Sirve usando tu colador."] },
+                { name: "Coco-Café", emoji: "🥥", glass: "Vaso corto", prep: "Opcional: Escarchar con un poco de crema de coco y coco rallado seco.", ingredients: ["1.5 oz de Ron", "1.5 oz de Café frío", "1 oz de Crema de coco"], steps: ["Agrega hielo, ron, café y crema de coco al shaker.", "Agita con fuerza; dará un cuerpo espeso y cremoso.", "Sirve usando el colador."] },
+                { name: "Café Frappé", emoji: "🧊", glass: "Vaso alto", prep: "Manchar las paredes internas del vaso dejando caer hilos de jarabe de chocolate.", ingredients: ["2 oz de Agua", "1 cda. de Café soluble", "1 oz de Jarabe o azúcar"], steps: ["Pon hielo en el shaker, añade agua, café y jarabe.", "Agita como loco por 15 segundos para generar muchísima espuma.", "Pásalo por el colador a tu vaso decorado."] },
+                { name: "Iced Latte Batido", emoji: "🥤", glass: "Vaso alto", prep: "Ninguna.", ingredients: ["2 oz de Café frío", "3 oz de Leche", "0.5 oz de Vainilla o jarabe"], steps: ["Llena el shaker con hielo, añade café, leche y vainilla.", "Agita fuertemente unos 10 segundos.", "Sirve con el colador sobre hielo fresco."] },
+                { name: "Choco-Café Shaker", emoji: "🍫", glass: "Vaso alto", prep: "Escarchar el borde con polvo para preparar chocolate (tipo Choco Milk).", ingredients: ["1.5 oz de Café frío", "3 oz de Leche", "1 cda. de Chocolate en polvo"], steps: ["Introduce hielo, café, leche y chocolate al shaker.", "Agita muy fuerte hasta disolver el polvo por completo.", "Usa el colador para servir."] },
+                { name: "Mazapán Frappé", emoji: "🥜", glass: "Vaso alto", prep: "Untar un poco de miel en el borde exterior del vaso y pegarle trocitos de mazapán desmoronado.", ingredients: ["2 oz de Café frío", "2 oz de Leche", "Medio mazapán"], steps: ["Desmenuza el mazapán restante dentro del shaker.", "Agrega hielo, café y leche. Agita con extrema fuerza.", "Sirve con el colador (está bien si pasan pedacitos pequeños de cacahuate)."] }
+            ]
+        };
+
+        function enterBar() {
+            const splash = document.getElementById('splash-screen');
+            const app = document.getElementById('app');
+            
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                app.style.display = 'flex';
+                document.getElementById('btn-all').click();
+            }, 800);
+        }
+
+        function getPreviewText(ingredientsList) {
+            if(ingredientsList.length <= 2) return ingredientsList.join(', ');
+            return ingredientsList.slice(0, 2).join(', ') + '...';
+        }
+
+        function loadCategory(categoryName, btnElement) {
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            const listContainer = document.getElementById('recipe-list');
+            listContainer.innerHTML = ''; 
+
+            let drinksToRender = [];
+
+            if(categoryName === 'Todas') {
+                Object.keys(cocktails).forEach(key => {
+                    cocktails[key].forEach(drink => {
+                        drinksToRender.push({ ...drink, category: key });
+                    });
+                });
+            } else {
+                drinksToRender = cocktails[categoryName].map(drink => ({ ...drink, category: categoryName }));
+            }
+            
+            drinksToRender.forEach((drink) => {
+                const item = document.createElement('div');
+                item.className = 'recipe-item';
+                const previewStr = getPreviewText(drink.ingredients);
+                item.innerHTML = `
+                    <div class="item-emoji">${drink.emoji}</div>
+                    <div class="item-name">${drink.name}</div>
+                    <div class="item-preview">${previewStr}</div>
+                `;
+                item.onclick = () => showRecipeModal(drink);
+                listContainer.appendChild(item);
+            });
+        }
+
+        function showRecipeModal(drink) {
+            const modal = document.getElementById('drink-modal');
+            const modalBody = document.getElementById('modal-body');
+            
+            let ingHTML = '<ul>';
+            drink.ingredients.forEach(ing => { ingHTML += `<li>${ing}</li>`; });
+            ingHTML += '</ul>';
+
+            let stepsHTML = '<ol>';
+            drink.steps.forEach(step => { stepsHTML += `<li>${step}</li>`; });
+            stepsHTML += '</ol>';
+
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <p class="modal-emoji">${drink.emoji}</p>
+                    <h2 class="details-title">${drink.name}</h2>
+                    <span class="modal-category-tag">Base: ${drink.category}</span>
+                </div>
+                
+                <h3>🥃 Cristalería y Vaso</h3>
+                <ul class="prep-list">
+                    <li><strong>Vaso recomendado:</strong> ${drink.glass}</li>
+                    <li><strong>Preparación previa:</strong> ${drink.prep}</li>
+                </ul>
+
+                <h3>🛒 Ingredientes</h3>
+                ${ingHTML}
+                
+                <h3>🧊 Preparación en el Shaker</h3>
+                ${stepsHTML}
+            `;
+
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('show'); }, 10);
+        }
+
+        function closeModal(event) {
+            const modal = document.getElementById('drink-modal');
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+    </script>
+</body>
+</html>
